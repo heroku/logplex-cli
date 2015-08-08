@@ -1,5 +1,7 @@
 # A simple CLI client to interact with the logplex API
 
+Work in progress.
+
 HEROKU_CLOUD => ops == logs-api.herokai.com
 HEROKU_CLOUD => production == logs-api.heroku.com
 
@@ -12,3 +14,4 @@ logplex-cli channel destroy
 
 logplex-cli drain add
 logplex-cli drain remove
+
