@@ -18,5 +18,8 @@ build: setup
 test: build
 	docker run --rm ${NAME} 
 
+compile:
+	go build -v .
+
 clean:
 	rm -rf dist

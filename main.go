@@ -43,50 +43,61 @@ func readConfig() {
 	}
 }
 
+func IsSubcommand(arguments map[string]interface{}, group, command string) bool {
+	invoked, ok := arguments[group].(bool)
+	if ok && invoked {
+		invoked, ok = arguments[command].(bool)
+		return ok && invoked
+	}
+	return false
+}
+
 func main() {
 	usage := `Logplex CLI.
 
-	Usage:
-		logplex-cli channel create <name> <token>...
-		logplex-cli channel destroy <name>
+Usage:
+	logplex-cli channel create <name> <token>...
+	logplex-cli channel destroy <channelId>
 	`
 
 	arguments, err := docopt.Parse(usage, nil, true, "Logplex CLI", false)
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 		os.Exit(1)
-	}
-
-	if config.Debug {
-		log.Printf("Arguments => %+v\n", arguments)
 	}
 
 	readConfig()
 
 	if config.Debug {
 		log.Printf("Config => %+v\n", config)
+		log.Printf("Arguments => %+v\n", arguments)
 	}
 
-	if _, ok := arguments["channel"]; ok {
+	if IsSubcommand(arguments, "channel", "create") {
+		// create
+		str := arguments["<name>"].(string)
+		tokens := arguments["<token>"].([]string)
 
-		if _, ok := arguments["create"]; ok {
-			// create
-			str := arguments["<name>"].(string)
-			tokens := arguments["<token>"].([]string)
-
-			channel, err := createChannel(&ChannelRequest{Name: str, Tokens: tokens})
-			if err != nil {
-				log.Fatalf("ERR: %v\n", err)
-			}
-			fmt.Printf("Created channel: %+v\n", channel)
-
-		} else if _, ok := arguments["destroy"]; ok {
-			// destroy
-			fmt.Printf("channel destroy %v\n", arguments["<token>"])
+		channel, err := createChannel(&ChannelRequest{Name: str, Tokens: tokens})
+		if err != nil {
+			log.Fatalf("channel creation error: %v\n", err)
 		}
+		fmt.Printf("Created channel: %+v\n", channel)
+	} else if IsSubcommand(arguments, "channel", "destroy") {
+		// destroy
+		channelId := arguments["<channelId>"].(string)
+		err := destroyChannel(channelId)
+		if err != nil {
+			log.Fatalf("channel destruction error: %v\n", err)
+		}
+		fmt.Printf("Channel %v destroyed.\n", channelId)
 	}
 
 }
+
+//
+// channel:create
+//
 
 func createChannel(payload *ChannelRequest) (*ChannelResponse, error) {
 	// TODO: possibly ignore request certificates
@@ -125,4 +136,26 @@ type ChannelRequest struct {
 type ChannelResponse struct {
 	ChannelId int               `json:"channel_id"`
 	Tokens    map[string]string `json:"tokens"`
+}
+
+//
+// channel:destroy
+//
+
+func destroyChannel(channelId string) error {
+	req := goreq.Request{
+		Method: "DELETE",
+		Uri:    fmt.Sprintf("%s/v2/channels/%s", config.Endpoint, channelId),
+	}.WithHeader("Authorization", fmt.Sprintf("Basic %s", config.AuthKey))
+
+	response, err := req.Do()
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != 200 {
+		return fmt.Errorf("Unsuccessful response (%v) from logplex", response.Status)
+	}
+	return nil
 }

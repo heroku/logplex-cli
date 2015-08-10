@@ -1,26 +1,22 @@
 # Logplex client (work in progress)
 
-```
-cloud ops
-...
-logplex-cli channel create mychannel mytoken
-...
-logplex-cli drain add ...
-```
+## Usage
 
-## Detects your cloud
 ```
-HEROKU_CLOUD => ops == logs-api.herokai.com
-HEROKU_CLOUD => production == logs-api.heroku.com
-```
-
-## Channels
+cloud mycloud  # or export LOGPLEX_ENDPOINT
+export LOGPLEX_AUTH_KEY=...
 
 logplex-cli channel create
 logplex-cli channel destroy
-
-## Drains
-
 logplex-cli drain add
 logplex-cli drain remove
+```
+
+## TODO
+
+* [X] channel create
+* [X] channel destory
+* [ ] drain add
+* [ ] drain remove
+* [ ] JSON output (for scriptability)
 
