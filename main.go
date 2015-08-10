@@ -59,6 +59,8 @@ func main() {
 Usage:
 	logplex-cli channel create <name> <token>...
 	logplex-cli channel destroy <channelId>
+  logplex-cli drain add <channelId> <drainUrl>
+  logplex-cli drain remove <channelId> <drainId>
 	`
 
 	arguments, err := docopt.Parse(usage, nil, true, "Logplex CLI", false)
@@ -74,31 +76,40 @@ Usage:
 		log.Printf("Arguments => %+v\n", arguments)
 	}
 
-	if IsSubcommand(arguments, "channel", "create") {
-		// create
-		str := arguments["<name>"].(string)
-		tokens := arguments["<token>"].([]string)
-
-		channel, err := createChannel(&ChannelRequest{Name: str, Tokens: tokens})
-		if err != nil {
-			log.Fatalf("channel creation error: %v\n", err)
-		}
-
-		bytes, err := json.Marshal(channel)
+	value, err := runCommand(arguments)
+	if err != nil {
+		log.Fatal(err.Error())
+	} else {
+		// Dumping JSON for scriptability. Ideally should have --json argument.
+		bytes, err := json.Marshal(value)
 		if err != nil {
 			log.Fatal(err)
 		}
 		fmt.Printf("%s\n", string(bytes))
-	} else if IsSubcommand(arguments, "channel", "destroy") {
-		// destroy
-		channelId := arguments["<channelId>"].(string)
-		err := destroyChannel(channelId)
-		if err != nil {
-			log.Fatalf("channel destruction error: %v\n", err)
-		}
-		fmt.Printf("{}\n")
 	}
+}
 
+func runCommand(arguments map[string]interface{}) (interface{}, error) {
+	dummyValue := map[string]string{}
+	switch {
+	case IsSubcommand(arguments, "channel", "create"):
+		str := arguments["<name>"].(string)
+		tokens := arguments["<token>"].([]string)
+		return createChannel(&ChannelRequest{Name: str, Tokens: tokens})
+	case IsSubcommand(arguments, "channel", "destroy"):
+		channelId := arguments["<channelId>"].(string)
+		return dummyValue, destroyChannel(channelId)
+	case IsSubcommand(arguments, "drain", "add"):
+		channelId := arguments["<channelId>"].(string)
+		drainUrl := arguments["<drainUrl>"].(string)
+		return addDrain(channelId, drainUrl)
+	case IsSubcommand(arguments, "drain", "remove"):
+		channelId := arguments["<channelId>"].(string)
+		drainId := arguments["<drainId>"].(string)
+		return dummyValue, removeDrain(channelId, drainId)
+	}
+	log.Fatalf("unreachable")
+	return dummyValue, nil
 }
 
 //
@@ -152,6 +163,66 @@ func destroyChannel(channelId string) error {
 	req := goreq.Request{
 		Method: "DELETE",
 		Uri:    fmt.Sprintf("%s/v2/channels/%s", config.Endpoint, channelId),
+	}.WithHeader("Authorization", fmt.Sprintf("Basic %s", config.AuthKey))
+
+	response, err := req.Do()
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != 200 {
+		return fmt.Errorf("Unsuccessful response (%v) from logplex", response.Status)
+	}
+	return nil
+}
+
+// drain:add
+
+func addDrain(channelId, drainUrl string) (*DrainResponse, error) {
+	var payload struct {
+		Url string `json:"url"`
+	}
+	payload.Url = drainUrl
+
+	req := goreq.Request{
+		Method:      "POST",
+		Uri:         fmt.Sprintf("%s/v2/channels/%s/drains", config.Endpoint, channelId),
+		Body:        payload,
+		ContentType: "application/json",
+	}.WithHeader("Authorization", fmt.Sprintf("Basic %s", config.AuthKey))
+
+	response, err := req.Do()
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != 201 {
+		return nil, fmt.Errorf("Unsuccessful response (%v) from logplex", response.Status)
+	}
+
+	var drainResponse DrainResponse
+	err = response.Body.FromJsonTo(&drainResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return &drainResponse, err
+}
+
+type DrainResponse struct {
+	Id    int    `json:"id"`
+	Token string `json:"token"`
+	Url   string `json:"url"`
+}
+
+// drain:remove
+
+func removeDrain(channelId, drainId string) error {
+	req := goreq.Request{
+		Method: "DELETE",
+		Uri:    fmt.Sprintf("%s/v2/channels/%s/drains/%s", config.Endpoint, channelId, drainId),
 	}.WithHeader("Authorization", fmt.Sprintf("Basic %s", config.AuthKey))
 
 	response, err := req.Do()
