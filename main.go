@@ -29,7 +29,7 @@ func readConfig() {
 		}
 		switch config.HerokuCloud {
 		case "ops":
-			config.Endpoint = "https://ops.dev.logplex.io"
+			config.Endpoint = "https://logs-api.herokai.com"
 		case "production":
 			config.Endpoint = "https://logs-api.heroku.com"
 		default:
@@ -38,7 +38,7 @@ func readConfig() {
 	}
 
 	if config.AuthKey == "" {
-		log.Fatalf("$LOGPLEX_AUTH_KEY not set; you can find it in hgetall cred:api of logplex_config_redis")
+		log.Fatalf("$LOGPLEX_AUTH_KEY is not set; retrieve it using `ion-client config:get -a logplex LOGPLEX_AUTH_KEY`")
 	}
 }
 
@@ -63,6 +63,7 @@ func main() {
 	log.Printf("Config => %+v\n", config)
 
 	if _, ok := arguments["channel"]; ok {
+
 		if _, ok := arguments["create"]; ok {
 			// create
 			str := arguments["<name>"].(string)
