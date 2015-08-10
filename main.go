@@ -13,18 +13,21 @@ import (
 
 type Config struct {
 	Endpoint    string `envconfig:"LOGPLEX_ENDPOINT"`
-	AuthKey     string `envconfig:"LOGPLEX_AUTH_KEY" required:"true"`
-	HerokuCloud string `envconfig:"HEROKU_CLOUD" required:"true"`
+	AuthKey     string `envconfig:"LOGPLEX_AUTH_KEY"`
+	HerokuCloud string `envconfig:"HEROKU_CLOUD"`
 }
 
 var config Config
 
-func init() {
+func readConfig() {
 	if err := envconfig.Process("logplex", &config); err != nil {
-		log.Fatalf("ERR: %v", err)
+		log.Fatalf("ERR: not all environment vars are set (%v)", err)
 	}
 
 	if config.Endpoint == "" {
+		if config.HerokuCloud == "" {
+			log.Fatalf("Either $HEROKU_CLOUD or $LOGPLEX_ENDPOINT must be set")
+		}
 		switch config.HerokuCloud {
 		case "ops":
 			config.Endpoint = "https://logs-api.herokai.com"
@@ -33,6 +36,10 @@ func init() {
 		default:
 			log.Fatalf("Probably a devcloud, TODO")
 		}
+	}
+
+	if config.AuthKey == "" {
+		log.Fatalf("$LOGPLEX_AUTH_KEY not set; you can find it in hgetall cred:api of logplex_config_redis")
 	}
 }
 
@@ -50,7 +57,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Printf("%+v\n", arguments)
+	log.Printf("Arguments => %+v\n", arguments)
+
+	readConfig()
+
+	log.Printf("Config => %+v\n", config)
 
 	if _, ok := arguments["channel"]; ok {
 		log.Println("channel")
@@ -61,11 +72,11 @@ func main() {
 			tokens := arguments["<token>"].([]string)
 
 			err := createChannel(&Channel{Name: str, Tokens: tokens})
-			log.Printf("ERR: %v", err)
+			log.Printf("ERR: %v\n", err)
 
 		} else if _, ok := arguments["destroy"]; ok {
 			// destroy
-			log.Printf("channel destroy %v", arguments["<token>"])
+			log.Printf("channel destroy %v\n", arguments["<token>"])
 		}
 	}
 
@@ -81,13 +92,14 @@ func createChannel(payload *Channel) error {
 		ContentType: "application/json",
 	}.WithHeader("Authorization", fmt.Sprintf("Basic %s", config.AuthKey))
 
-	response, error := req.Do()
-	if error == nil {
+	response, err := req.Do()
+	if err == nil {
 		io.Copy(os.Stdout, response.Body)
+		fmt.Println("")
 		defer response.Body.Close()
 	}
 
-	return error
+	return err
 }
 
 type Channel struct {

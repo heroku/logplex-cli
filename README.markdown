@@ -1,9 +1,18 @@
-# A simple CLI client to interact with the logplex API
+# Logplex client (work in progress)
 
-Work in progress.
+```
+cloud ops
+...
+logplex-cli channel create mychannel mytoken
+...
+logplex-cli drain add ...
+```
 
+## Detects your cloud
+```
 HEROKU_CLOUD => ops == logs-api.herokai.com
 HEROKU_CLOUD => production == logs-api.heroku.com
+```
 
 ## Channels
 
