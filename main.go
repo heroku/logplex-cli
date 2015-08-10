@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"encoding/json"
 	"github.com/docopt/docopt-go"
 	"github.com/franela/goreq"
 	"github.com/kelseyhightower/envconfig"
@@ -82,7 +83,12 @@ Usage:
 		if err != nil {
 			log.Fatalf("channel creation error: %v\n", err)
 		}
-		fmt.Printf("Created channel: %+v\n", channel)
+
+		bytes, err := json.Marshal(channel)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("%s\n", string(bytes))
 	} else if IsSubcommand(arguments, "channel", "destroy") {
 		// destroy
 		channelId := arguments["<channelId>"].(string)
@@ -90,7 +96,7 @@ Usage:
 		if err != nil {
 			log.Fatalf("channel destruction error: %v\n", err)
 		}
-		fmt.Printf("Channel %v destroyed.\n", channelId)
+		fmt.Printf("{}\n")
 	}
 
 }

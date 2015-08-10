@@ -18,5 +18,5 @@ logplex-cli drain remove
 * [X] channel destory
 * [ ] drain add
 * [ ] drain remove
-* [ ] JSON output (for scriptability)
+* [X] JSON output (for scriptability)
 
