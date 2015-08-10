@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"os"
 
@@ -64,8 +63,6 @@ func main() {
 	log.Printf("Config => %+v\n", config)
 
 	if _, ok := arguments["channel"]; ok {
-		log.Println("channel")
-
 		if _, ok := arguments["create"]; ok {
 			// create
 			str := arguments["<name>"].(string)
@@ -96,8 +93,11 @@ func createChannel(payload *Channel) error {
 
 	response, err := req.Do()
 	if err == nil {
-		io.Copy(os.Stdout, response.Body)
-		fmt.Println("")
+		text, err := response.Body.ToString()
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Response (%v): %v\n", response.Status, text)
 		defer response.Body.Close()
 	}
 
