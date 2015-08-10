@@ -30,7 +30,7 @@ func readConfig() {
 		}
 		switch config.HerokuCloud {
 		case "ops":
-			config.Endpoint = "https://logs-api.herokai.com"
+			config.Endpoint = "https://ops.dev.logplex.io"
 		case "production":
 			config.Endpoint = "https://logs-api.heroku.com"
 		default:
@@ -72,7 +72,9 @@ func main() {
 			tokens := arguments["<token>"].([]string)
 
 			err := createChannel(&Channel{Name: str, Tokens: tokens})
-			log.Printf("ERR: %v\n", err)
+			if err != nil {
+				log.Fatalf("ERR: %v\n", err)
+			}
 
 		} else if _, ok := arguments["destroy"]; ok {
 			// destroy
