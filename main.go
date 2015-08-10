@@ -69,10 +69,11 @@ func main() {
 			str := arguments["<name>"].(string)
 			tokens := arguments["<token>"].([]string)
 
-			err := createChannel(&Channel{Name: str, Tokens: tokens})
+			channel, err := createChannel(&ChannelRequest{Name: str, Tokens: tokens})
 			if err != nil {
 				log.Fatalf("ERR: %v\n", err)
 			}
+			log.Printf("Created channel: %+v\n", channel)
 
 		} else if _, ok := arguments["destroy"]; ok {
 			// destroy
@@ -82,7 +83,7 @@ func main() {
 
 }
 
-func createChannel(payload *Channel) error {
+func createChannel(payload *ChannelRequest) (*ChannelResponse, error) {
 	// TODO: possibly ignore request certificates
 	// https://github.com/heroku/heroku-cli/commit/75403de1a0d581e1eb9acfffe9ab0443e3f36a38
 	req := goreq.Request{
@@ -93,19 +94,30 @@ func createChannel(payload *Channel) error {
 	}.WithHeader("Authorization", fmt.Sprintf("Basic %s", config.AuthKey))
 
 	response, err := req.Do()
-	if err == nil {
-		text, err := response.Body.ToString()
-		if err != nil {
-			return err
-		}
-		fmt.Printf("Response (%v): %v\n", response.Status, text)
-		defer response.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != 201 {
+		return nil, fmt.Errorf("Unsuccessful response (%v) from logplex", response.Status)
 	}
 
-	return err
+	var channelResponse ChannelResponse
+	err = response.Body.FromJsonTo(&channelResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return &channelResponse, err
 }
 
-type Channel struct {
+type ChannelRequest struct {
 	Name   string   `json:"name"`
 	Tokens []string `json:"tokens"`
+}
+
+type ChannelResponse struct {
+	ChannelId int               `json:"channel_id"`
+	Tokens    map[string]string `json:"tokens"`
 }
