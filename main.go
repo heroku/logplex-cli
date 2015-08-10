@@ -11,6 +11,7 @@ import (
 )
 
 type Config struct {
+	Debug       bool   `envconfig:"DEBUG"`
 	Endpoint    string `envconfig:"LOGPLEX_ENDPOINT"`
 	AuthKey     string `envconfig:"LOGPLEX_AUTH_KEY"`
 	HerokuCloud string `envconfig:"HEROKU_CLOUD"`
@@ -56,11 +57,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Printf("Arguments => %+v\n", arguments)
+	if config.Debug {
+		log.Printf("Arguments => %+v\n", arguments)
+	}
 
 	readConfig()
 
-	log.Printf("Config => %+v\n", config)
+	if config.Debug {
+		log.Printf("Config => %+v\n", config)
+	}
 
 	if _, ok := arguments["channel"]; ok {
 
@@ -73,11 +78,11 @@ func main() {
 			if err != nil {
 				log.Fatalf("ERR: %v\n", err)
 			}
-			log.Printf("Created channel: %+v\n", channel)
+			fmt.Printf("Created channel: %+v\n", channel)
 
 		} else if _, ok := arguments["destroy"]; ok {
 			// destroy
-			log.Printf("channel destroy %v\n", arguments["<token>"])
+			fmt.Printf("channel destroy %v\n", arguments["<token>"])
 		}
 	}
 
