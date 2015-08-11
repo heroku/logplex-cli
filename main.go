@@ -1,8 +1,10 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
 	"encoding/json"
@@ -16,6 +18,7 @@ type Config struct {
 	Endpoint    string `envconfig:"LOGPLEX_ENDPOINT"`
 	AuthKey     string `envconfig:"LOGPLEX_AUTH_KEY"`
 	HerokuCloud string `envconfig:"HEROKU_CLOUD"`
+	SslInsecure bool   `envconfig:"SSL_INSECURE"`
 }
 
 var config Config
@@ -36,11 +39,19 @@ func readConfig() {
 			config.Endpoint = "https://logs-api.heroku.com"
 		default:
 			config.Endpoint = fmt.Sprintf("https://logplex-api-ssl.ssl.%s.herokudev.com", config.HerokuCloud)
+			config.SslInsecure = true
 		}
 	}
 
 	if config.AuthKey == "" {
 		log.Fatalf("$LOGPLEX_AUTH_KEY is not set; retrieve it using `ion-client config:get -a logplex LOGPLEX_AUTH_KEY`")
+	}
+
+	if config.SslInsecure {
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		goreq.DefaultClient = &http.Client{Transport: tr}
 	}
 }
 
