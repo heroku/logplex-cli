@@ -35,7 +35,7 @@ func readConfig() {
 		case "production":
 			config.Endpoint = "https://logs-api.heroku.com"
 		default:
-			log.Fatalf("Probably a devcloud, TODO")
+			config.Endpoint = fmt.Sprintf("https://logplex-api-ssl.ssl.%s.herokudev.com", config.HerokuCloud)
 		}
 	}
 
