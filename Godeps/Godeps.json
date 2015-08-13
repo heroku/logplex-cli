@@ -1,0 +1,23 @@
+{
+	"ImportPath": "github.com/heroku/logplex-cli",
+	"GoVersion": "go1.4.2",
+	"Packages": [
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/docopt/docopt-go",
+			"Comment": "0.6.1-5-g854c423",
+			"Rev": "854c423c810880e30b9fecdabb12d54f4a92f9bb"
+		},
+		{
+			"ImportPath": "github.com/franela/goreq",
+			"Rev": "8f5efc273865ec2e0d51aef6f628e51c4103984c"
+		},
+		{
+			"ImportPath": "github.com/kelseyhightower/envconfig",
+			"Comment": "v1.0.0-22-g4e0792c",
+			"Rev": "4e0792c28c6af6d74af7bac93eedb34a29107010"
+		}
+	]
+}
