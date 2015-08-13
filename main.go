@@ -8,9 +8,9 @@ import (
 	"os"
 
 	"encoding/json"
-	"github.com/docopt/docopt-go"
-	"github.com/franela/goreq"
-	"github.com/kelseyhightower/envconfig"
+	"github.com/heroku/logplex-cli/Godeps/_workspace/src/github.com/docopt/docopt-go"
+	"github.com/heroku/logplex-cli/Godeps/_workspace/src/github.com/franela/goreq"
+	"github.com/heroku/logplex-cli/Godeps/_workspace/src/github.com/kelseyhightower/envconfig"
 )
 
 type Config struct {
