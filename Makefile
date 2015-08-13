@@ -8,8 +8,7 @@ setup:
 	docker run --name ${NAME}-run -d ${NAME}-build
 	docker wait ${NAME}-run
 	mkdir -p dist
-	docker cp ${NAME}-run:/go/bin/app dist
-	mv dist/app dist/logplex-cli
+	docker cp ${NAME}-run:/go/bin/logplex-cli dist
 	docker rm ${NAME}-run
 
 build: setup

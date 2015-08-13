@@ -1,2 +1,6 @@
-FROM golang:1.5rc1-onbuild
+FROM golang:1.5rc1
 ENV CGO_ENABLED 0
+RUN mkdir -p /go/src/github.com/heroku
+COPY . /go/src/github.com/heroku/logplex-cli
+WORKDIR /go/src/github.com/heroku/logplex-cli
+RUN go install ./...
