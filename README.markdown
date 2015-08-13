@@ -1,4 +1,4 @@
-# Logplex client (work in progress)
+# Logplex client
 
 ## Usage
 
@@ -11,12 +11,3 @@ logplex-cli channel destroy
 logplex-cli drain add
 logplex-cli drain remove
 ```
-
-## TODO
-
-* [X] channel create
-* [X] channel destory
-* [X] drain add
-* [X] drain remove
-* [X] JSON output (for scriptability)
-
